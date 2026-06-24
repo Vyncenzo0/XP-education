@@ -129,38 +129,6 @@ export default function PresenceList({ currentUserId, studentId }: PresenceListP
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">
-          {/* Active User Card (Self) */}
-          <motion.div
-            id="node-myself-card"
-            className={`p-5 rounded-xl border text-left flex items-center justify-between relative overflow-hidden transition-all duration-300 shadow-lg ${
-              "bg-surface border-border text-ink"
-            }`}
-          >
-            <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br opacity-5 rounded-bl-full `} />
-            
-            <div className="flex items-center gap-4 relative z-10">
-              <div className={`w-12 h-12 rounded-xl text-2xl flex items-center justify-center border bg-surface-raised border-border`}>
-                🛡️
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-black tracking-tight leading-none uppercase">You</h4>
-                  <span className="text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded uppercase font-mono border bg-success-subtle border-success">ONLINE</span>
-                </div>
-                <p className="text-[10px] text-stone-500 mt-1 uppercase font-mono font-medium tracking-wide">
-                  {studentId || "N/A"} · {getCampusName(studentId)}
-                </p>
-                <div className={`mt-2 text-[10px] font-mono font-medium text-signal`}>
-                  STATUS: <span className="underline underline-offset-2 uppercase">In Lobby</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="hidden sm:block relative z-10">
-              <div className={`w-2 h-2 rounded-full shadow-lg animate-pulse bg-success-subtle`} />
-            </div>
-          </motion.div>
-
           {/* Roster list participants */}
           <AnimatePresence>
             {filteredUsers.map((usr) => (
