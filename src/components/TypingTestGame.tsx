@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "../context/ThemeContext";
-import { Keyboard, RotateCcw, Award, CheckCircle, AlertCircle, Sparkles, Timer } from "lucide-react";
+import { Keyboard, RotateCcw, Award, CheckCircle, Timer, RefreshCw } from "lucide-react";
 
 interface TypingTestGameProps {
   uid: string;
@@ -48,7 +48,6 @@ function generateWordList(count: number = 40, difficulty: "easy" | "medium" | "h
                          : difficulty === "hard" ? HARD_PARAGRAPHS
                          : ELITE_PARAGRAPHS;
   
-  // Shuffle the paragraphs to randomize every instance
   const shuffledParagraphs = [...selectedParagraphs].sort(() => 0.5 - Math.random());
   
   let words: string[] = [];
@@ -56,7 +55,6 @@ function generateWordList(count: number = 40, difficulty: "easy" | "medium" | "h
   
   while (words.length < count) {
     if (pIdx >= shuffledParagraphs.length) {
-      // If we run out, shuffle again and reset
       shuffledParagraphs.sort(() => 0.5 - Math.random());
       pIdx = 0;
     }
@@ -74,9 +72,10 @@ export default function TypingTestGame({ uid, displayName, onGameEnd, onExit }: 
   const [typedInput, setTypedInput] = useState<string>("");
   const [testDurationSetting, setTestDurationSetting] = useState<number>(30);
   const [testDifficultySetting, setTestDifficultySetting] = useState<"easy" | "medium" | "hard" | "elite">("medium");
-  const [timeLeft, setTimeLeft] = useState<number>(30); // 30s test standard
+  const [timeLeft, setTimeLeft] = useState<number>(30);
   const [testActive, setTestActive] = useState<boolean>(false);
   const [testFinished, setTestFinished] = useState<boolean>(false);
+  const [isInputFocused, setIsInputFocused] = useState<boolean>(true);
   
   // Scoring parameters
   const [totalKeystrokes, setTotalKeystrokes] = useState<number>(0);
@@ -88,6 +87,7 @@ export default function TypingTestGame({ uid, displayName, onGameEnd, onExit }: 
   // References
   const textInputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Initialize the words
   useEffect(() => {
@@ -97,13 +97,49 @@ export default function TypingTestGame({ uid, displayName, onGameEnd, onExit }: 
     };
   }, [testDurationSetting, testDifficultySetting]);
 
+  // Focus mechanics and global keydown listener
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || e.key === "Escape") {
+        return;
+      }
+      if (e.key === "Tab") {
+        e.preventDefault();
+        resetTest();
+        return;
+      }
+      if (document.activeElement !== textInputRef.current && !testFinished) {
+        textInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [testFinished]);
+
+  // Line scrolling as user types
+  useEffect(() => {
+    const activeWordIdx = typedInput.split(" ").length - 1;
+    const activeWordEl = document.getElementById(`word-${activeWordIdx}`);
+    const container = containerRef.current;
+    if (activeWordEl && container) {
+      const containerHeight = container.clientHeight;
+      const wordTop = activeWordEl.offsetTop;
+      const wordHeight = activeWordEl.clientHeight;
+      
+      const targetScroll = wordTop - (containerHeight / 2) + (wordHeight / 2);
+      container.scrollTo({
+        top: targetScroll,
+        behavior: "smooth"
+      });
+    }
+  }, [typedInput]);
+
   const resetTest = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    // We want enough words for the time. 45 is good for 30s for an average typist, let's just make it big enough
-    setWords(generateWordList(250, testDifficultySetting));
+    setWords(generateWordList(200, testDifficultySetting));
     setTypedInput("");
     setTimeLeft(testDurationSetting);
     setTestActive(false);
@@ -113,6 +149,7 @@ export default function TypingTestGame({ uid, displayName, onGameEnd, onExit }: 
     setWrongKeystrokes(0);
     setWpm(0);
     setAccuracy(100);
+    setIsInputFocused(true);
     setTimeout(() => {
       textInputRef.current?.focus();
     }, 50);
@@ -138,11 +175,9 @@ export default function TypingTestGame({ uid, displayName, onGameEnd, onExit }: 
   useEffect(() => {
     if (!testActive && timeLeft === testDurationSetting) return;
     
-    // Calculate accuracy and WPM
     const elapsedSeconds = testDurationSetting - timeLeft;
     const elapsedMinutes = elapsedSeconds > 0 ? elapsedSeconds / 60 : 1 / 60;
     
-    // WPM = (correct chars / 5) / (elapsed minutes)
     const currentWpm = Math.round((correctCharacters / 5) / elapsedMinutes);
     setWpm(Math.max(0, currentWpm));
 
@@ -154,14 +189,15 @@ export default function TypingTestGame({ uid, displayName, onGameEnd, onExit }: 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (testFinished) return;
     
-    const value = e.target.value;
+    let value = e.target.value;
+    value = value.replace(/  +/g, " "); // prevent multiple spaces
+    
     if (!testActive && value.length > 0) {
       startTimer();
     }
 
     setTypedInput(value);
 
-    // Calculate correct vs wrong characters comparing value with consolidated word string
     const targetString = words.join(" ");
     let correct = 0;
     let wrong = 0;
@@ -184,208 +220,367 @@ export default function TypingTestGame({ uid, displayName, onGameEnd, onExit }: 
   };
 
   const handleFinishAndSave = () => {
-    // Pass wpm as score for achievements and leaderboard
     const diffLabel = testDifficultySetting.charAt(0).toUpperCase() + testDifficultySetting.slice(1);
     onGameEnd(Math.round(wpm), accuracy, `⌨️ TYPE (${testDurationSetting}s, ${diffLabel}):`);
   };
 
-  const targetText = words.join(" ");
+  // Build the MonkeyType style word list rendering with flat indices
+  let globalCharIdx = 0;
+  const renderedWords = words.map((word, wIdx) => {
+    const activeWordIdx = typedInput.split(" ").length - 1;
+    const isWordActive = wIdx === activeWordIdx;
+    const wordCharSpans = [];
+
+    // Render characters inside the word
+    for (let i = 0; i < word.length; i++) {
+      const char = word[i];
+      const flatIdx = globalCharIdx;
+      globalCharIdx++;
+
+      let charClass = "text-muted/30 transition-colors duration-150";
+      let isCurrent = flatIdx === typedInput.length;
+
+      if (flatIdx < typedInput.length) {
+        const isCorrect = typedInput[flatIdx] === char;
+        charClass = isCorrect 
+          ? "text-ink font-medium" 
+          : "text-danger border-b-2 border-danger/60 font-semibold";
+      }
+
+      wordCharSpans.push(
+        <span key={`char-${wIdx}-${i}`} className="relative inline">
+          {isCurrent && <span className="custom-caret" />}
+          <span className={charClass}>{char}</span>
+        </span>
+      );
+    }
+
+    // Handle extra typed characters at the end of active word (typos past word length)
+    const typedWords = typedInput.split(" ");
+    if (isWordActive && typedWords[wIdx] && typedWords[wIdx].length > word.length) {
+      const extraTyped = typedWords[wIdx].slice(word.length);
+      for (let i = 0; i < extraTyped.length; i++) {
+        const char = extraTyped[i];
+        const isCurrent = (globalCharIdx + i) === typedInput.length;
+        wordCharSpans.push(
+          <span key={`extra-${wIdx}-${i}`} className="relative inline animate-pulse">
+            {isCurrent && <span className="custom-caret" />}
+            <span className="text-danger/90 border-b-2 border-danger font-semibold bg-danger-subtle/10">{char}</span>
+          </span>
+        );
+      }
+    }
+
+    // Space after the word
+    const hasSpace = wIdx < words.length - 1;
+    let spaceSpan = null;
+    if (hasSpace) {
+      const spaceFlatIdx = globalCharIdx;
+      globalCharIdx++;
+      const isCurrent = spaceFlatIdx === typedInput.length;
+      let spaceClass = "text-muted/10";
+      
+      if (spaceFlatIdx < typedInput.length) {
+        const isCorrect = typedInput[spaceFlatIdx] === " ";
+        spaceClass = isCorrect ? "text-muted/10" : "text-danger bg-danger/10 border-b-2 border-danger/60 font-semibold";
+      }
+
+      spaceSpan = (
+        <span key={`space-${wIdx}`} className="relative inline">
+          {isCurrent && <span className="custom-caret" />}
+          <span className={spaceClass}>&nbsp;</span>
+        </span>
+      );
+    }
+
+    return (
+      <span 
+        key={`word-wrap-${wIdx}`} 
+        id={`word-${wIdx}`}
+        className={`inline-block py-0.5 px-1 rounded transition-colors duration-200 ${
+          isWordActive ? "bg-signal-subtle/10" : ""
+        }`}
+      >
+        <span className="inline-flex">
+          {wordCharSpans}
+        </span>
+        {spaceSpan}
+      </span>
+    );
+  });
 
   return (
-    <div className={`flex flex-col h-full border rounded-xl relative overflow-hidden font-sans transition-all duration-300 lab-light-panel text-ink`}>
-      
-      {/* Top Header Controls */}
-      <div className={`p-4 border-b flex flex-col md:flex-row items-center justify-between gap-4 relative z-10 transition-colors duration-300 bg-surface border-border`}>
-        <div className="flex items-center flex-wrap gap-4 w-full md:w-auto">
-          <div className="flex items-center gap-2">
-            <span className={`text-xs font-mono font-medium text-muted`}>
-              Active Lab: Terminal Typing Master
-            </span>
-          </div>
-          
-          {/* Settings Toggles */}
-          {!testActive && !testFinished && (
-            <div className={`flex items-center gap-2 border-l pl-3 border-border`}>
-              <select
-                value={testDurationSetting}
-                onChange={(e) => setTestDurationSetting(Number(e.target.value))}
-                className={`text-[10px] sm:text-xs font-mono px-2 py-1 rounded outline-none cursor-pointer border transition-colors ${
-                  "bg-surface-raised border-border text-ink"
-                }`}
-              >
-                <option value={30}>30s Test</option>
-                <option value={60}>60s Test</option>
-              </select>
-              <select
-                value={testDifficultySetting}
-                onChange={(e) => setTestDifficultySetting(e.target.value as "easy" | "medium" | "hard" | "elite")}
-                className={`text-[10px] sm:text-xs font-mono px-2 py-1 rounded outline-none cursor-pointer border transition-colors ${
-                  "bg-surface-raised border-border text-ink"
-                }`}
-              >
-                <option value="easy">Easy Words</option>
-                <option value="medium">Med Words</option>
-                <option value="hard">Hard Words</option>
-                <option value="elite">Elite Code</option>
-              </select>
-            </div>
-          )}
-        </div>
+    <div className="flex flex-col h-full border rounded-xl relative overflow-hidden font-sans transition-all duration-300 lab-light-panel text-ink">
+      <style>{`
+        @keyframes caretBlink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+        .custom-caret {
+          position: absolute;
+          left: 0;
+          top: 15%;
+          height: 70%;
+          width: 2px;
+          background-color: var(--signal);
+          animation: caretBlink 1s infinite;
+          pointer-events: none;
+        }
+      `}</style>
 
-        <div className="flex items-center gap-4 font-mono text-xs text-stone-400 w-full md:w-auto justify-end">
-          <div className={`flex items-center gap-1 border px-2 py-1 rounded transition-colors bg-surface-raised border-border`}>
-            <Timer className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-            <span className={`font-medium text-success`}>{timeLeft}s</span>
-          </div>
-          <div className={`flex items-center gap-1 border px-2 py-1 rounded transition-colors bg-surface-raised border-border`}>
-            <span className="text-xs font-medium text-emerald-400">{wpm} WPM</span>
-          </div>
-          <div className={`flex items-center gap-1 border px-2 py-1 rounded transition-colors bg-surface-raised border-border`}>
-            <span className="text-xs font-medium text-sky-400">{accuracy}% Acc</span>
-          </div>
-          <div className={`h-4 w-px hidden sm:block bg-surface-raised`} />
-          <button
-            onClick={onExit}
-            className={`text-[9px] uppercase font-mono font-medium tracking-wider px-2.5 py-1 rounded border transition cursor-pointer ${
-              "bg-surface border-border text-muted hover:bg-surface-raised"
-            }`}
-          >
-            Exit
-          </button>
+      {/* Top Header Controls */}
+      <div className="p-4 border-b flex items-center justify-between gap-4 relative z-10 transition-colors duration-300 bg-surface border-border">
+        <div className="flex items-center gap-2">
+          <Keyboard className="w-4 h-4 text-signal" />
+          <span className="text-xs font-mono font-medium tracking-wide uppercase">
+            Lab Terminal Precision
+          </span>
         </div>
+        <button
+          onClick={onExit}
+          className="text-[9px] uppercase font-mono font-medium tracking-wider px-2.5 py-1 rounded border transition cursor-pointer bg-surface border-border text-muted hover:bg-surface-raised"
+        >
+          Exit
+        </button>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center max-w-3xl mx-auto w-full p-6 md:p-8 space-y-8">
+      {/* Main Centered Play Mechanics */}
+      <div className="flex-1 flex flex-col justify-center items-center py-10 px-4 md:px-8 relative overflow-hidden bg-surface">
         
-        {!testFinished ? (
-          <div className="space-y-6">
-            <div className="text-center space-y-1">
-              <span className="text-[10px] uppercase font-mono tracking-widest text-cyan-400 block font-medium">TERMINAL TYPING SPEED</span>
-              <p className="text-xs text-stone-500">Click in the box below and start typing to initialize the countdown.</p>
-            </div>
-
-            {/* Simulated Keyboard Icon Accent */}
-            <div className="flex justify-center">
-              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-colors bg-surface border-border text-muted`}>
-                <Keyboard className="w-5 h-5" />
-              </div>
-            </div>
-
-            {/* Immersive Typing Text Arena */}
-            <div 
-              className={`relative p-6 md:p-8 border rounded-xl overflow-hidden min-h-[160px] cursor-text transition-colors bg-surface border-border`}
+        {/* Focusing Layer */}
+        <AnimatePresence>
+          {!isInputFocused && !testFinished && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-surface/90 backdrop-blur-[1.5px] z-20 flex flex-col items-center justify-center cursor-pointer"
               onClick={() => textInputRef.current?.focus()}
             >
-              <div className="text-base md:text-lg font-mono leading-relaxed select-none text-left tracking-wide">
-                {targetText.split("").map((char, index) => {
-                  let colorClass = ""; // not typed
-                  let isCurrent = index === typedInput.length;
-                  
-                  if (index < typedInput.length) {
-                    const isCorrect = typedInput[index] === char;
-                    if (isCorrect) {
-                      colorClass = "font-medium text-success";
-                    } else {
-                      colorClass = "font-semibold underline decoration-red-600 bg-danger-subtle text-danger";
-                    }
-                  }
+              <div className="text-center space-y-3">
+                <p className="text-sm font-mono text-signal font-medium animate-pulse">
+                  🖱️ Click inside or press any key to focus typing arena
+                </p>
+                <p className="text-[10px] uppercase tracking-widest text-muted/60 font-mono">
+                  Pressing TAB resets test immediately
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-                  return (
-                    <span
-                      key={index}
-                      className={`relative inline ${colorClass} ${
-                        isCurrent ? `animate-pulse border-success text-ink` : ""
-                      }`}
-                    >
-                      {char}
-                    </span>
-                  );
-                })}
+        <div className="max-w-[850px] w-full space-y-10 flex flex-col justify-center">
+          
+          {!testFinished ? (
+            <>
+              {/* Minimalist MonkeyType Config Option Bar */}
+              <AnimatePresence>
+                {!testActive && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="flex justify-center relative z-30"
+                  >
+                    <div className="inline-flex items-center gap-4 bg-surface-raised border border-border/50 rounded-full px-5 py-1.5 shadow-sm text-[11px] font-mono select-none">
+                      {/* Time */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-muted/50 uppercase text-[9px] tracking-wider font-semibold">Time:</span>
+                        {[15, 30, 60].map((t) => (
+                          <button
+                            key={t}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              setTestDurationSetting(t);
+                              setTimeLeft(t);
+                              textInputRef.current?.focus();
+                            }}
+                            className={`px-2 py-0.5 rounded transition-all font-semibold cursor-pointer ${
+                              testDurationSetting === t
+                                ? "text-signal bg-signal-subtle/40"
+                                : "text-muted hover:text-ink"
+                            }`}
+                          >
+                            {t}s
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Divider */}
+                      <div className="h-3.5 w-px bg-border/60" />
+
+                      {/* Difficulty */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-muted/50 uppercase text-[9px] tracking-wider font-semibold">Words:</span>
+                        {(["easy", "medium", "hard", "elite"] as const).map((diff) => (
+                          <button
+                            key={diff}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                              setTestDifficultySetting(diff);
+                              textInputRef.current?.focus();
+                            }}
+                            className={`px-2 py-0.5 rounded capitalize transition-all font-semibold cursor-pointer ${
+                              testDifficultySetting === diff
+                                ? "text-signal bg-signal-subtle/40"
+                                : "text-muted hover:text-ink"
+                            }`}
+                          >
+                            {diff === "elite" ? "Elite Code" : diff}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Live HUD (Minimal Stats Overlay) */}
+              <div className="flex justify-between items-baseline border-b border-border/20 pb-2 px-1">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-light font-mono text-signal leading-none">
+                    {timeLeft}
+                  </span>
+                  <span className="text-xs font-mono text-muted/60 uppercase tracking-widest font-semibold">s left</span>
+                </div>
+                {testActive && (
+                  <div className="flex items-center gap-4 font-mono text-xs">
+                    <div className="flex flex-col items-end">
+                      <span className="text-[10px] text-muted/40 uppercase tracking-wider">Speed</span>
+                      <span className="text-sm font-semibold text-ink leading-none">{wpm} WPM</span>
+                    </div>
+                    <div className="h-6 w-px bg-border/20" />
+                    <div className="flex flex-col items-end">
+                      <span className="text-[10px] text-muted/40 uppercase tracking-wider">Accuracy</span>
+                      <span className="text-sm font-semibold text-ink leading-none">{accuracy}%</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Hidden focused text input field */}
-              <input
-                ref={textInputRef}
-                type="text"
-                autoComplete="off"
-                autoCapitalize="off"
-                autoCorrect="off"
-                spellCheck="false"
-                value={typedInput}
-                onChange={handleInputChange}
-                className="absolute inset-0 opacity-0 w-full h-full cursor-text"
-                disabled={testFinished}
-              />
-            </div>
+              {/* Bounded, Fluid Typing Area */}
+              <div className="relative">
+                {/* Hidden focused text input field */}
+                <input
+                  ref={textInputRef}
+                  type="text"
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  spellCheck="false"
+                  value={typedInput}
+                  onChange={handleInputChange}
+                  onFocus={() => setIsInputFocused(true)}
+                  onBlur={() => setIsInputFocused(false)}
+                  className="absolute inset-0 opacity-0 w-full h-full cursor-text z-0"
+                  disabled={testFinished}
+                />
 
-            {/* Quick Actions Panel */}
-            <div className="flex justify-center">
-              <button
-                onClick={resetTest}
-                className={`px-4 py-2 border text-xs font-mono font-medium rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
-                  "bg-surface border-border text-muted hover:text-signal"
-                }`}
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Reset Test
-              </button>
-            </div>
-          </div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className={`p-6 md:p-8 border rounded-xl text-center space-y-6 transition-colors bg-surface border-border`}
-          >
-            <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto">
-              <CheckCircle className="w-6 h-6" />
-            </div>
-
-            <div className="space-y-1.5">
-              <h3 className={`text-xl font-medium text-ink`}>Terminal Test Completed!</h3>
-              <p className={`text-xs text-muted`}>Excellent pace! Your calculated system performance statistics are compiled below.</p>
-            </div>
-
-            {/* Dynamic Recap Stats Cards */}
-            <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
-              <div className={`p-4 border rounded-xl space-y-0.5 transition-colors bg-surface-raised border-border`}>
-                <span className="text-[9px] font-mono uppercase text-stone-500 font-medium block">Gross Speed</span>
-                <span className={`text-2xl font-black font-mono block text-success`}>{wpm}</span>
-                <span className="text-[10px] font-mono text-stone-500">Words Per Minute</span>
+                {/* 3-Line Constrained Scrollable Word Container */}
+                <div 
+                  ref={containerRef}
+                  className="h-[140px] overflow-hidden relative w-full pr-2 select-none cursor-text text-left leading-relaxed font-mono text-lg md:text-xl text-justify"
+                  onClick={() => textInputRef.current?.focus()}
+                >
+                  <div className="flex flex-wrap gap-x-3 gap-y-4 items-center">
+                    {renderedWords}
+                  </div>
+                </div>
               </div>
 
-              <div className={`p-4 border rounded-xl space-y-0.5 transition-colors bg-surface-raised border-border`}>
-                <span className="text-[9px] font-mono uppercase text-stone-500 font-medium block">Accuracy Rating</span>
-                <span className={`text-2xl font-black font-mono block `}>{accuracy}%</span>
-                <span className="text-[10px] font-mono text-stone-500">Correct Inputs</span>
+              {/* Minimalist Controls Section */}
+              <div className="flex justify-center pt-4 relative z-30">
+                <button
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    resetTest();
+                    textInputRef.current?.focus();
+                  }}
+                  title="Reset (or press TAB)"
+                  className="p-3 border border-border/40 rounded-full transition bg-surface hover:bg-surface-raised text-muted/60 hover:text-signal shadow-sm hover:scale-105 active:scale-95 duration-150 cursor-pointer"
+                >
+                  <RotateCcw className="w-5 h-5" />
+                </button>
               </div>
-            </div>
+            </>
+          ) : (
+            /* Premium MonkeyType End Stats Screen */
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="p-8 border rounded-2xl text-center space-y-8 bg-surface-raised border-border/60 shadow-lg max-w-xl mx-auto w-full"
+            >
+              <div className="w-14 h-14 rounded-full bg-success/10 border border-success/30 flex items-center justify-center text-success mx-auto">
+                <CheckCircle className="w-7 h-7" />
+              </div>
 
-            {/* Action flow buttons */}
-            <div className="flex gap-2 justify-center max-w-sm mx-auto pt-2">
-              <button
-                onClick={resetTest}
-                className={`flex-1 px-4 py-2.5 border text-xs font-mono font-medium uppercase rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
-                  "bg-surface border-border text-muted hover:bg-surface-raised"
-                }`}
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Retry
-              </button>
-              <button
-                onClick={handleFinishAndSave}
-                className="flex-[2] px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-emerald-500 text-stone-950 hover:from-cyan-400 hover:to-emerald-400 text-xs font-mono font-medium uppercase rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 shadow"
-              >
-                <Award className="w-4 h-4" />
-                Record Results
-              </button>
-            </div>
-          </motion.div>
-        )}
+              <div className="space-y-2">
+                <h3 className="text-2xl font-light tracking-tight text-ink">Test Complete</h3>
+                <p className="text-xs text-muted">Excellent effort! Your terminal speed performance data has been finalized.</p>
+              </div>
+
+              {/* Large Display Stats */}
+              <div className="grid grid-cols-2 gap-6 py-2">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-muted block">Speed</span>
+                  <span className="text-5xl font-extralight font-mono text-signal leading-none">{wpm}</span>
+                  <span className="text-[10px] font-mono text-muted/60 block mt-1">Words Per Minute</span>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-muted block">Accuracy</span>
+                  <span className="text-5xl font-extralight font-mono text-success leading-none">{accuracy}%</span>
+                  <span className="text-[10px] font-mono text-muted/60 block mt-1">Correct Key Inputs</span>
+                </div>
+              </div>
+
+              {/* Metadata details */}
+              <div className="border-t border-b border-border/30 py-3 grid grid-cols-3 text-center text-xs font-mono text-muted/80">
+                <div>
+                  <span className="block text-[9px] text-muted/40 uppercase">Difficulty</span>
+                  <span className="font-semibold text-ink capitalize">{testDifficultySetting}</span>
+                </div>
+                <div className="border-l border-r border-border/30">
+                  <span className="block text-[9px] text-muted/40 uppercase">Keystrokes</span>
+                  <span className="font-semibold text-ink">{totalKeystrokes}</span>
+                </div>
+                <div>
+                  <span className="block text-[9px] text-muted/40 uppercase">Errors</span>
+                  <span className="font-semibold text-danger">{wrongKeystrokes}</span>
+                </div>
+              </div>
+
+              {/* Actions panel */}
+              <div className="flex gap-3 justify-center pt-2">
+                <button
+                  onClick={resetTest}
+                  className="flex-1 py-3 px-5 border text-xs font-mono font-medium uppercase rounded-xl transition cursor-pointer flex items-center justify-center gap-2 bg-surface border-border text-muted hover:bg-surface-raised"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Retry
+                </button>
+                <button
+                  onClick={handleFinishAndSave}
+                  className="flex-[2] py-3 px-6 bg-gradient-to-r from-signal to-indigo-600 hover:from-signal-hover hover:to-indigo-500 text-white text-xs font-mono font-medium uppercase rounded-xl transition cursor-pointer flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.98] duration-150"
+                >
+                  <Award className="w-4 h-4" />
+                  Record Results
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+        </div>
       </div>
 
-      <div className={`p-4 border-t flex items-center justify-center text-[10.5px] font-mono transition-colors bg-surface-raised border-border text-muted`}>
-        <span className={"text-muted"}>Tip: Quick-restart typing at any point during active timer using the Reset Test button.</span>
+      <div className="p-3 border-t flex items-center justify-center text-[11px] font-mono transition-colors bg-surface-raised border-border text-muted">
+        <span className="flex items-center gap-1.5 opacity-60">
+          <kbd className="px-1.5 py-0.5 bg-surface border border-border/60 rounded text-[9px] shadow-sm">TAB</kbd>
+          <span>Quick restart typing test</span>
+          <span className="text-muted/40">•</span>
+          <kbd className="px-1.5 py-0.5 bg-surface border border-border/60 rounded text-[9px] shadow-sm">ESC</kbd>
+          <span>Unfocus typing arena</span>
+        </span>
       </div>
     </div>
   );

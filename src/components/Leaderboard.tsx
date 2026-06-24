@@ -22,8 +22,8 @@ export default function Leaderboard({ currentUserId }: LeaderboardProps) {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<GameFilter>("pc");
-  const [typeDifficulty, setTypeDifficulty] = useState<"all" | "Easy" | "Med">("all");
-  const [typeDuration, setTypeDuration] = useState<"all" | "30" | "60">("all");
+  const [typeDifficulty, setTypeDifficulty] = useState<"all" | "Easy" | "Medium" | "Hard" | "Elite">("all");
+  const [typeDuration, setTypeDuration] = useState<"all" | "15" | "30" | "60">("all");
   const [pingDifficulty, setPingDifficulty] = useState<"all" | "Beginner" | "Intermediate" | "Advanced" | "Campaign">("all");
 
   useEffect(() => {
@@ -329,22 +329,25 @@ export default function Leaderboard({ currentUserId }: LeaderboardProps) {
              <span className="text-[9px] font-mono text-stone-500 uppercase">Mode:</span>
              <select
                value={typeDifficulty}
-               onChange={(e) => setTypeDifficulty(e.target.value as "all" | "Easy" | "Med")}
+               onChange={(e) => setTypeDifficulty(e.target.value as any)}
                className={`border text-[9px] font-mono px-1 py-0.5 rounded outline-none cursor-pointer bg-surface border-border text-ink`}
              >
                <option value="all">All</option>
                <option value="Easy">Easy</option>
-               <option value="Med">Medium</option>
+               <option value="Medium">Medium</option>
+               <option value="Hard">Hard</option>
+               <option value="Elite">Elite</option>
              </select>
           </div>
           <div className="flex items-center gap-1.5">
              <span className="text-[9px] font-mono text-stone-500 uppercase">Time:</span>
              <select
                value={typeDuration}
-               onChange={(e) => setTypeDuration(e.target.value as "all" | "30" | "60")}
+               onChange={(e) => setTypeDuration(e.target.value as any)}
                className={`border text-[9px] font-mono px-1 py-0.5 rounded outline-none cursor-pointer bg-surface border-border text-ink`}
              >
                <option value="all">All</option>
+               <option value="15">15s</option>
                <option value="30">30s</option>
                <option value="60">60s</option>
              </select>

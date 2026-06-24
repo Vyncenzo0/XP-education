@@ -177,10 +177,7 @@ export default function PresenceList({ currentUserId, studentId }: PresenceListP
                   </div>
                 </div>
 
-                <div className="text-right ml-4">
-                  <div className="text-[9px] font-black text-stone-500 uppercase tracking-tighter opacity-50">Score</div>
-                  <div className="text-sm font-mono font-black text-cyan-500 leading-none">{usr.currentScore || "---"}</div>
-                </div>
+                {/* Removed score display block */}
               </motion.div>
             ))}
           </AnimatePresence>

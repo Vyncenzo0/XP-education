@@ -31,7 +31,13 @@ IT-MASTERY features 7 realistic mini-game simulators:
 
 ## 📈 Patch Notes & Version History
 
-### **v1.2.0 - Educational Branding & UI Optimization** (Current Version)
+### **v1.3.0 - Typing Test Redesign & Leaderboard Optimization** (Current Version)
+* **MonkeyType Typing Experience**: Completely redesigned the layout mechanics of the Terminal Precision Typing Test. Contained the text sequences within a centered, constrained-width container (850px max) utilizing a clean, highly readable monospace font with elegant line-heights and smooth vertical text container scrolling.
+* **Typing Focus Layer**: Integrated a sophisticated focus overlay that blurs out the terminal when the user clicks away or loses input focus. Clear keyboard mappings (like **TAB** to quickly restart, and **ESC** to release focus) ensure zero distraction.
+* **Expanded Leaderboard Filters**: Updated the Rankings component to dynamically filter records based on the newly introduced typing test modes. Added dropdown supports for all 4 difficulties (**Easy**, **Medium**, **Hard**, and **Elite**) and 3 duration configurations (**15s**, **30s**, **60s**).
+* **Presence List Simplification**: Removed individual user scores from the real-time engagement roster to keep focus purely on peer activity and clean up layout space.
+
+### **v1.2.0 - Educational Branding & UI Optimization**
 * **Branding Alignment**: Swapped out generic network indicators and target icons across the app with an elegant **GraduationCap** (`GraduationCap`) logo to reflect the platform's core educational mission of training, reviewing, and mastering IT & Networking concepts.
 * **SVG Favicon Integration**: Integrated a high-fidelity, inline dynamic graduation-themed SVG icon inside `index.html` to serve as a custom browser favicon matching the refreshed visual identity.
 * **Presence List Simplification**: Removed the redundant "You" (Self) card from the active presence roster. Since each user is already signed into their single local account, displaying self-status alongside other active lab peers was cluttering the lobby panel.

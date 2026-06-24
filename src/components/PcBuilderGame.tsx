@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "../context/ThemeContext";
-import { Cpu, Grid, HardDrive, Zap, Info, ShieldAlert, Sparkles, AlertCircle, TrendingUp, Check, Award, RefreshCw } from "lucide-react";
+import { Cpu, Grid, HardDrive, Zap, Info, ShieldAlert, AlertCircle, TrendingUp, Check, Award, RefreshCw } from "lucide-react";
 
 interface PcBuilderGameProps {
   uid: string;
@@ -545,44 +545,6 @@ export default function PcBuilderGame({ uid, displayName, onGameEnd, onExit, the
         </div>
         
         <div className="flex items-center gap-4 text-xs font-mono">
-          <button
-            onClick={() => {
-               if (selectedScenarioIndex === 0) {
-                 // Casual Office Optimization
-                 setSelections({
-                   cpu: PARTS_DATABASE.cpu.find(p => p.id === 'cpu-amd-5600') || null,
-                   motherboard: PARTS_DATABASE.motherboard.find(p => p.id === 'mobo-asrock-b550') || null,
-                   gpu: PARTS_DATABASE.gpu.find(p => p.id === 'gpu-integrated') || null,
-                   ram: PARTS_DATABASE.ram.find(p => p.id === 'ram-ddr4-16') || null,
-                   storage: PARTS_DATABASE.storage.find(p => p.id === 'storage-nvme-1tb') || null,
-                   psu: PARTS_DATABASE.psu.find(p => p.id === 'psu-500') || null
-                 });
-               } else if (selectedScenarioIndex === 1) {
-                 // E-Sports Rig Optimization
-                 setSelections({
-                   cpu: PARTS_DATABASE.cpu.find(p => p.id === 'cpu-intel-13400') || null,
-                   motherboard: PARTS_DATABASE.motherboard.find(p => p.id === 'mobo-gigabyte-b760') || null,
-                   gpu: PARTS_DATABASE.gpu.find(p => p.id === 'gpu-rx-7800') || null,
-                   ram: PARTS_DATABASE.ram.find(p => p.id === 'ram-ddr4-16') || null,
-                   storage: PARTS_DATABASE.storage.find(p => p.id === 'storage-nvme-1tb') || null,
-                   psu: PARTS_DATABASE.psu.find(p => p.id === 'psu-750') || null
-                 });
-               } else if (selectedScenarioIndex === 2) {
-                 // AI Workstation Optimization (Hits 20,000+)
-                 setSelections({
-                   cpu: PARTS_DATABASE.cpu.find(p => p.id === 'cpu-intel-13900') || null,
-                   motherboard: PARTS_DATABASE.motherboard.find(p => p.id === 'mobo-asus-rog-z790') || null,
-                   gpu: PARTS_DATABASE.gpu.find(p => p.id === 'gpu-rtx-4070') || null,
-                   ram: PARTS_DATABASE.ram.find(p => p.id === 'ram-ddr5-32') || null,
-                   storage: PARTS_DATABASE.storage.find(p => p.id === 'storage-nvme-2tb') || null,
-                   psu: PARTS_DATABASE.psu.find(p => p.id === 'psu-1000') || null
-                 });
-               }
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-signal/10 hover:bg-signal/20 text-signal border border-signal/30 transition-colors"
-          >
-            <Sparkles className="w-3.5 h-3.5" /> Optimize
-          </button>
           <div className={"text-muted"}>
             Budget Target: <span className={"font-medium text-success"}>${scenario.budget}</span>
           </div>
