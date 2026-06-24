@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Cpu, Layers, Target, ChevronRight, Sparkles, Trophy, Database, Award, Info, Keyboard, Cable, Binary, Wrench, Network, Lock, Check, User, MessageSquare } from "lucide-react";
+import { Cpu, Layers, ChevronRight, Sparkles, Trophy, Database, Award, Info, Keyboard, Cable, Binary, Wrench, Network, Lock, Check, User, MessageSquare, GraduationCap } from "lucide-react";
 import { LeaderboardEntry, ActiveLab } from "../types";
 import { doc, setDoc, collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import { updatePresenceStatus } from "../lib/presence";
@@ -883,7 +883,7 @@ export default function GameConsole({
             {/* Menu Header Status Bar */}
             <div id="game-status-header" className={`p-4 border-b flex items-center justify-between gap-4 transition-colors duration-300 relative z-20 backdrop-blur-md bg-surface border-border`}>
               <div className="flex items-center gap-2">
-                <Target className={`w-5 h-5 text-signal`} />
+                <GraduationCap className={`w-5 h-5 text-signal`} />
                 <span className={`font-sans font-semibold text-xs font-medium text-signal`}>IT-MASTERY Labs</span>
               </div>
 
@@ -1129,7 +1129,7 @@ export default function GameConsole({
                               : "bg-signal hover:bg-signal-hover"
                           }`}
                         >
-                          <Target className="w-4 h-4" /> LAUNCH LAB WORKBENCH
+                          <GraduationCap className="w-4 h-4" /> LAUNCH LAB WORKBENCH
                         </button>
                       </div>
                     </div>

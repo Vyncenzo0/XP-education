@@ -3,7 +3,7 @@ import GameConsole from "./GameConsole";
 import Leaderboard from "./Leaderboard";
 import UserProfileStats from "./UserProfileStats";
 import PresenceList from "./PresenceList";
-import { LogOut, Target, Settings, Award, Users, Sun, Moon } from "lucide-react";
+import { LogOut, GraduationCap, Settings, Award, Users, Sun, Moon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "../context/ThemeContext";
 import { useState } from "react";
@@ -61,7 +61,7 @@ export default function Dashboard({
         <div id="dashboard-navbar" className={`flex flex-col sm:flex-row items-center justify-between gap-4 border-b p-4 rounded-xl relative overflow-hidden transition-colors duration-300 bg-surface border-border`}>
         <div className="flex items-center gap-3 relative">
             <div className={`w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0 bg-signal`}>
-            <Target className={`w-6 h-6 text-white`} />
+            <GraduationCap className={`w-6 h-6 text-white`} />
             </div>
             <div>
             <h1 className="text-xl font-display font-medium tracking-tight text-ink flex items-center gap-1">

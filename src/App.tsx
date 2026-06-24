@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { onAuthStateChanged, signOut, updateProfile } from "firebase/auth";
 import { doc, getDocs, setDoc, query, where, collection, runTransaction, getDoc } from "firebase/firestore";
 import { motion, AnimatePresence } from "motion/react";
-import { Gamepad2, Award, Users, Target, Volume2, Sparkles, LogOut, Settings, Sliders, Smartphone, Monitor, Tv, Tablet, Sun, Moon, LayoutDashboard, User, MessageSquare } from "lucide-react";
+import { Gamepad2, Award, Users, GraduationCap, Volume2, Sparkles, LogOut, Settings, Sliders, Smartphone, Monitor, Tv, Tablet, Sun, Moon, LayoutDashboard, User, MessageSquare } from "lucide-react";
 import { auth, db, isInitialized } from "./lib/firebase";
 import { registerPresence, removePresence, updatePresenceStatus, heartbeat } from "./lib/presence";
 import { useTheme } from "./context/ThemeContext";
@@ -582,7 +582,7 @@ export default function App() {
             <div id="dashboard-navbar" className={`flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-lg relative overflow-hidden shadow-sm border backdrop-blur-md transition-colors duration-300 bg-surface border-border`}>
               <div className="flex items-center gap-3 relative">
                 <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center shadow-md transform rotate-3 flex-shrink-0">
-                  <Target className="w-6 h-6 text-white" />
+                  <GraduationCap className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h1 className={`text-[20px] font-mono font-semibold tracking-[-0.01em] flex items-center text-ink`}>

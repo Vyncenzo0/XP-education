@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { motion } from "motion/react";
-import { Lock, Mail, RefreshCw, AlertCircle, Target, Building } from "lucide-react";
+import { Lock, Mail, RefreshCw, AlertCircle, GraduationCap, Building } from "lucide-react";
 import { auth, db, isInitialized } from "../lib/firebase";
 import ForgotPasswordForm from "./ForgotPasswordForm";
 import { useTheme } from "../context/ThemeContext";
@@ -134,7 +134,7 @@ export default function AuthModal({ onSuccess, onBackToHome }: AuthModalProps) {
 
         <div id="auth-header" className="text-center mb-8 relative">
           <div className="mx-auto w-14 h-14 bg-gradient-to-tr from-indigo-600 to-indigo-500 rounded-[6px] flex items-center justify-center shadow-md transform rotate-6 duration-350">
-            <Target className="w-8 h-8 text-white" />
+            <GraduationCap className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-mono font-semibold tracking-[-0.01em] mt-4 text-ink">
             IT-MASTERY

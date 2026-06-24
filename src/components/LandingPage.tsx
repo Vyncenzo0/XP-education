@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Sparkles, Target, Timer, LineChart, Users, Brain, BookOpen, ArrowRight, Gamepad2, Award, Cpu, Layers, Keyboard, Cable, Binary, Wrench, Network, Sun, Moon, Server } from "lucide-react";
+import { Sparkles, Timer, LineChart, Users, Brain, BookOpen, ArrowRight, Gamepad2, Award, Cpu, Layers, Keyboard, Cable, Binary, Wrench, Network, Sun, Moon, Server, GraduationCap } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 
 interface LandingPageProps {
@@ -114,7 +114,7 @@ export default function LandingPage({ onEnterPortal }: LandingPageProps) {
       <header className={`w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between border-b border-border z-10`}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center shadow-md transform rotate-3">
-            <Target className="w-6 h-6 text-white" />
+            <GraduationCap className="w-6 h-6 text-white" />
           </div>
           <div>
             <h1 className={`text-xl font-sans font-semibold tracking-tight text-signal flex items-center gap-1`}>
@@ -229,7 +229,7 @@ export default function LandingPage({ onEnterPortal }: LandingPageProps) {
 
               <div className="relative flex items-center justify-between border-b pb-4 mb-5 border-stone-800">
                 <span className="text-[11px] font-mono font-medium text-indigo-400 flex items-center gap-2 uppercase tracking-widest">
-                  <Target className="w-4 h-4 text-indigo-400" />
+                  <GraduationCap className="w-4 h-4 text-indigo-400" />
                   IT-MASTERY
                 </span>
                 <span className="text-[10px] font-mono text-stone-500">SCH-01</span>

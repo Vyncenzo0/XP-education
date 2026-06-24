@@ -31,7 +31,13 @@ IT-MASTERY features 7 realistic mini-game simulators:
 
 ## 📈 Patch Notes & Version History
 
-### **v1.1.0 - Production Launch Preparation** (Current Version)
+### **v1.2.0 - Educational Branding & UI Optimization** (Current Version)
+* **Branding Alignment**: Swapped out generic network indicators and target icons across the app with an elegant **GraduationCap** (`GraduationCap`) logo to reflect the platform's core educational mission of training, reviewing, and mastering IT & Networking concepts.
+* **SVG Favicon Integration**: Integrated a high-fidelity, inline dynamic graduation-themed SVG icon inside `index.html` to serve as a custom browser favicon matching the refreshed visual identity.
+* **Presence List Simplification**: Removed the redundant "You" (Self) card from the active presence roster. Since each user is already signed into their single local account, displaying self-status alongside other active lab peers was cluttering the lobby panel.
+* **Compilation & Linting**: Fully validated and built the production-ready code with zero errors.
+
+### **v1.1.0 - Production Launch Preparation**
 * **Performance Enhancements**: Cleaned up stale reskin scripts and unused build logs (`reskin.cjs`, `fix-reskin*.cjs`, `output.txt`) to minimize package bundle weight.
 * **Firebase Resiliency**: Refactored `firebase.ts` to support fallback default Firestore databases dynamically if custom configured firestore IDs are unassigned, preventing database load crashes during external deployments.
 * **UI Calibration**: Polished layout margins, verified all SVGs from `lucide-react`, and ensured stable theme context propagation.
