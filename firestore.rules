@@ -32,16 +32,19 @@ service cloud.firestore {
                data.gamesPlayed is number &&
                data.avgReactionTime is number &&
                data.badges is list &&
-               data.createdAt is string;
+               data.createdAt is string &&
+               (!data.keys().contains('campus') || (data.campus is string && (data.campus == 'Cainta' || data.campus == 'Taytay' || data.campus == 'Antipolo' || data.campus == 'Sumulong' || data.campus == 'San Mateo' || data.campus == 'Binangonan' || data.campus == 'Cogeo'))) &&
+               (!data.keys().contains('profileCompleted') || data.profileCompleted is bool) &&
+               (!data.keys().contains('updatedAt') || data.updatedAt is string);
       }
 
       allow create: if isOwner(userId)
                     && isValidUser(incoming());
 
       allow update: if isOwner(userId)
+                    && isValidUser(incoming())
                     && (
-                      isValidUser(incoming()) || 
-                      incoming().diff(existing()).affectedKeys().hasAny(['highScore', 'gamesPlayed', 'avgReactionTime', 'badges', 'updatedAt', 'displayName', 'studentId'])
+                      (!existing().keys().contains('profileCompleted') || existing().profileCompleted == false || incoming().profileCompleted == true)
                     );
 
       allow delete: if isOwner(userId);

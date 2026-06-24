@@ -13,6 +13,8 @@
         "gamesPlayed": { "type": "number" },
         "avgReactionTime": { "type": "number" },
         "badges": { "type": "array", "items": { "type": "string" } },
+        "campus": { "type": "string", "enum": ["Cainta", "Taytay", "Antipolo", "Sumulong", "San Mateo", "Binangonan", "Cogeo"] },
+        "profileCompleted": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },

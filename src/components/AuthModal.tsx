@@ -75,10 +75,25 @@ export default function AuthModal({ onSuccess, onBackToHome }: AuthModalProps) {
         onSuccess(user.uid, user.displayName || "");
       } catch (err: any) {
         console.error("Auth registration error:", err);
-        if (err.code === "auth/email-already-in-use") {
-          setError("User already exists. Please sign in");
-        } else {
-          setError("Connection failed. Check your internet and try again.");
+        switch (err.code) {
+          case "auth/email-already-in-use":
+            setError("This email is already registered. Try signing in.");
+            break;
+          case "auth/invalid-email":
+            setError("The email address is invalid. Please double-check your spelling.");
+            break;
+          case "auth/weak-password":
+            setError("Password is too weak. It must be at least 6 characters.");
+            break;
+          case "auth/network-request-failed":
+            setError("Network connection failed. Check your internet connection and try again.");
+            break;
+          case "auth/too-many-requests":
+            setError("Too many registration requests from this device. Please wait a moment.");
+            break;
+          default:
+            setError(err.message || "Registration failed. Please check your inputs and try again.");
+            break;
         }
       } finally {
         setLoading(false);
@@ -103,7 +118,28 @@ export default function AuthModal({ onSuccess, onBackToHome }: AuthModalProps) {
         onSuccess(user.uid, user.displayName || "");
       } catch (err: any) {
         console.error("Auth login error:", err);
-        setError("Email or password is incorrect");
+        switch (err.code) {
+          case "auth/user-not-found":
+          case "auth/wrong-password":
+          case "auth/invalid-credential":
+            setError("Incorrect email or password. Please try again.");
+            break;
+          case "auth/invalid-email":
+            setError("Invalid email address format.");
+            break;
+          case "auth/user-disabled":
+            setError("This account has been disabled. Please contact administration.");
+            break;
+          case "auth/too-many-requests":
+            setError("Too many failed attempts. Account has been locked temporarily. Reset your password or try later.");
+            break;
+          case "auth/network-request-failed":
+            setError("Network connection failed. Check your internet connection and try again.");
+            break;
+          default:
+            setError(err.message || "Sign in failed. Please try again.");
+            break;
+        }
       } finally {
         setLoading(false);
       }

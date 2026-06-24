@@ -20,11 +20,12 @@ import UserProfileStats from "./components/UserProfileStats";
 import PresenceList from "./components/PresenceList";
 import FeedbackForm from "./components/FeedbackForm";
 import FeedbackAdminView from "./components/FeedbackAdminView";
+import ProfileCompletionModal from "./components/ProfileCompletionModal";
 import { ActiveLab } from "./types";
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
-  const [user, setUser] = useState<{ uid: string; displayName: string | null; studentId?: string; gmail?: string; emailVerified?: boolean } | null>(null);
+  const [user, setUser] = useState<{ uid: string; displayName: string | null; studentId?: string; gmail?: string; emailVerified?: boolean; campus?: string; profileCompleted?: boolean } | null>(null);
   const [currentView, setCurrentView] = useState<"landing" | "auth" | "verify-pending">("landing");
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string>("");
   const [pendingVerificationPassword, setPendingVerificationPassword] = useState<string>("");
@@ -40,6 +41,7 @@ export default function App() {
   const [autoScale, setAutoScale] = useState<boolean>(true);
   const [manualScale, setManualScale] = useState<number>(1);
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const [dismissedProfileModal, setDismissedProfileModal] = useState<boolean>(false);
 
   // Custom addition for settings saving status
   const [settingsDisplayName, setSettingsDisplayName] = useState<string>("");
@@ -170,6 +172,8 @@ export default function App() {
           let displayName = firebaseUser.displayName || "";
           let studentId = "";
           let gmail = firebaseUser.email || "";
+          let profileCompleted = false;
+          let campus = "";
 
           if (stored) {
             try {
@@ -180,13 +184,15 @@ export default function App() {
             } catch (e) {}
           }
 
-          if (!studentId && isInitialized) {
+          if (isInitialized) {
             try {
               const userDoc = await getDoc(doc(db, "users", uid));
               if (userDoc.exists()) {
                 const data = userDoc.data();
-                studentId = data.studentId || "";
-                if (!displayName && data.displayName) displayName = data.displayName;
+                studentId = data.studentId || studentId || "";
+                displayName = data.displayName || displayName || "";
+                profileCompleted = !!data.profileCompleted;
+                campus = data.campus || "";
               }
             } catch (err) {
               console.warn("Firestore user fetch failed:", err);
@@ -200,6 +206,8 @@ export default function App() {
             displayName: displayNameToUse, 
             studentId: studentId || "", 
             email: gmail || null,
+            campus,
+            profileCompleted,
             highScore: 0,
             gamesPlayed: 0,
             avgReactionTime: 0,
@@ -235,12 +243,14 @@ export default function App() {
     };
   }, [user?.uid]);
 
-  const handleAuthSuccess = (uid: string, displayName: string) => {
+  const handleAuthSuccess = async (uid: string, displayName: string) => {
     const localKey = `xp_education_profile_${uid}`;
     const stored = safeStorage.getItem(localKey);
     let studentId = "";
     let gmail = auth.currentUser?.email || "";
     let actualDisplayName = displayName;
+    let profileCompleted = false;
+    let campus = "";
 
     if (stored) {
       try {
@@ -251,7 +261,29 @@ export default function App() {
       } catch (e) {}
     }
 
-    setUser({ uid, displayName: actualDisplayName || null, studentId, gmail });
+    if (isInitialized) {
+      try {
+        const userDoc = await getDoc(doc(db, "users", uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          studentId = data.studentId || studentId;
+          actualDisplayName = data.displayName || actualDisplayName;
+          profileCompleted = !!data.profileCompleted;
+          campus = data.campus || "";
+        }
+      } catch (e) {
+        console.warn("handleAuthSuccess Firestore fetch failed:", e);
+      }
+    }
+
+    setUser({ 
+      uid, 
+      displayName: actualDisplayName || null, 
+      studentId, 
+      gmail,
+      profileCompleted,
+      campus
+    } as any);
   };
 
   const handleLogout = async () => {
@@ -1234,6 +1266,23 @@ export default function App() {
           </div>
         );
       })()}
+      {/* Profile Completion Modal */}
+      {user && !user.profileCompleted && !dismissedProfileModal && (
+        <ProfileCompletionModal
+          isOpen={true}
+          userId={user.uid}
+          onLater={() => setDismissedProfileModal(true)}
+          onClose={(updatedData) => {
+            setUser({
+              ...user,
+              displayName: updatedData.displayName,
+              campus: updatedData.campus,
+              studentId: updatedData.studentId,
+              profileCompleted: true
+            } as any);
+          }}
+        />
+      )}
     </div>
   );
 }

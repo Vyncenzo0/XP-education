@@ -31,7 +31,13 @@ IT-MASTERY features 7 realistic mini-game simulators:
 
 ## 📈 Patch Notes & Version History
 
-### **v1.3.0 - Typing Test Redesign & Leaderboard Optimization** (Current Version)
+### **v1.4.0 - IT-Mastery Profile Completion & Student ID Validation** (Current Version)
+* **Interactive Profile Completion Modal**: Introduced a beautifully crafted, dark-themed profile completion flow that prompts users to enter their custom display name, campus selection, and verified student ID.
+* **Campus-Specific Prefixes**: Replaced generic Philippine campuses with the local student ID prefixes (**Cainta (CA)**, **Taytay (TA)**, **Antipolo (AN)**, **Sumulong (SU)**, **San Mateo (SM)**, **Binangonan (BI)**, and **Cogeo (CO)**). The student ID form dynamically renders the correct prefix alongside a 9-digit numeric input.
+* **Transaction-safe ID Claims**: Leveraged a multi-document secure Firestore Transaction to guarantee student ID uniqueness. It validates that a student ID is unclaimed before writing the document claim and updating the user profile.
+* **User Experience & Later Bypass**: Added an elegant "Update Later" dismissal action to prevent hard blocks on initial dashboard visits, while displaying real-time frontend validation warnings (e.g. name length limits, numeric digit constraints) and a clean loading spinner during submissions.
+
+### **v1.3.0 - Typing Test Redesign & Leaderboard Optimization**
 * **MonkeyType Typing Experience**: Completely redesigned the layout mechanics of the Terminal Precision Typing Test. Contained the text sequences within a centered, constrained-width container (850px max) utilizing a clean, highly readable monospace font with elegant line-heights and smooth vertical text container scrolling.
 * **Typing Focus Layer**: Integrated a sophisticated focus overlay that blurs out the terminal when the user clicks away or loses input focus. Clear keyboard mappings (like **TAB** to quickly restart, and **ESC** to release focus) ensure zero distraction.
 * **Expanded Leaderboard Filters**: Updated the Rankings component to dynamically filter records based on the newly introduced typing test modes. Added dropdown supports for all 4 difficulties (**Easy**, **Medium**, **Hard**, and **Elite**) and 3 duration configurations (**15s**, **30s**, **60s**).
