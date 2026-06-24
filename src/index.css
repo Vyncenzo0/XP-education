@@ -1,0 +1,208 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap');
+@import "tailwindcss";
+
+@variant dark (&:is(.dark *));
+
+@layer base {
+  :root, html.theme-light {
+    --shell: #E8EAF0;
+    --surface: #FFFFFF;
+    --surface-raised: #F8FAFC;
+    --border: #D1D5DB;
+    --border-strong: #9CA3AF;
+
+    --ink: #0F1523;
+    --body: #1E293B;
+    --muted: #6B7280;
+    --disabled: #D1D5DB;
+
+    --signal: #2D6BE4;
+    --signal-hover: #1A56CC;
+    --signal-subtle: #EEF2FF;
+
+    --success: #00C27A;
+    --success-subtle: #F0FDF4;
+    --warning: #F59E0B;
+    --warning-subtle: #FFFBEB;
+    --danger: #EF4444;
+    --danger-subtle: #FEF2F2;
+
+    --terminal-bg: #0D1117;
+    --terminal-fg: #E2E8F0;
+    --terminal-dim: #6B7280;
+    --terminal-grn: #00C27A;
+    --terminal-blue: #58A6FF;
+    --terminal-amber: #F59E0B;
+  }
+
+  html.theme-dark {
+    --shell: #0A0D14;
+    --surface: #111827;
+    --surface-raised: #1C2333;
+    --border: #2D3748;
+    --border-strong: #4B5563;
+
+    --ink: #F1F5F9;
+    --body: #CBD5E1;
+    --muted: #6B7280;
+    --disabled: #374151;
+
+    --signal: #4D8EF5;
+    --signal-hover: #6BA3F7;
+    --signal-subtle: #1E2D4A;
+
+    --success: #10D48A;
+    --success-subtle: #052E1C;
+    --warning: #FBBF24;
+    --warning-subtle: #1F1A07;
+    --danger: #F87171;
+    --danger-subtle: #2A0F0F;
+
+    --terminal-bg: #060910;
+    --terminal-fg: #E2E8F0;
+    --terminal-dim: #4B5563;
+    --terminal-grn: #10D48A;
+    --terminal-blue: #58A6FF;
+    --terminal-amber: #FBBF24;
+  }
+
+  * {
+    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+  }
+
+  body {
+    background-color: var(--shell);
+    color: var(--ink);
+    font-family: var(--font-sans);
+  }
+}
+
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --radius-none: 0px;
+  --radius-xs: 3px;
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 6px;
+  --radius-2xl: 6px;
+  
+  --color-shell: var(--shell);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-ink: var(--ink);
+  --color-body: var(--body);
+  --color-muted: var(--muted);
+  --color-disabled: var(--disabled);
+
+  --color-signal: var(--signal);
+  --color-signal-hover: var(--signal-hover);
+  --color-signal-subtle: var(--signal-subtle);
+
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+
+  --color-terminal-bg: var(--terminal-bg);
+  --color-terminal-fg: var(--terminal-fg);
+  --color-terminal-dim: var(--terminal-dim);
+  --color-terminal-grn: var(--terminal-grn);
+  --color-terminal-blue: var(--terminal-blue);
+  --color-terminal-amber: var(--terminal-amber);
+}
+
+@utility panel-base {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+@utility lab-light-panel {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+@utility terminal-panel {
+  background-color: var(--terminal-bg);
+  color: var(--terminal-fg);
+  font-family: var(--font-mono);
+  border-radius: 6px;
+  transition: none !important;
+  & * {
+    transition: none !important;
+  }
+}
+
+@utility btn-primary {
+  background-color: var(--signal);
+  color: #FFFFFF;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-radius: 3px;
+}
+
+@utility btn-secondary {
+  background-color: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--border-strong);
+  font-family: var(--font-mono);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-radius: 3px;
+}
+
+@utility btn-danger {
+  background-color: var(--danger);
+  color: #FFFFFF;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-transform: uppercase;
+  border-radius: 3px;
+}
+
+@utility input-field {
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink);
+  background-color: var(--surface-raised);
+  &:focus {
+    border-color: var(--signal);
+    outline: none;
+  }
+}
+
+/* Custom indicator styles */
+.status-online { color: var(--success); font-family: var(--font-mono); }
+.status-inactive { color: var(--muted); font-family: var(--font-mono); }
+.status-warning { color: var(--warning); font-family: var(--font-mono); }
+.status-error { color: var(--danger); font-family: var(--font-mono); }
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--shell);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 0px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+

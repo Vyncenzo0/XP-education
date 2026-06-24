@@ -1,0 +1,126 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // --- Helper Functions ---
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+
+    // --- Rules ---
+    
+    // Users profile
+    match /users/{userId} {
+      // Anyone signed in can read a profile (to see display names on leaderboard)
+      // But we should protect private info if we had any. 
+      // For now, most fields are public except maybe email (though it's used for login).
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+
+      function isValidUser(data) {
+        return data.keys().hasAll(['uid', 'email', 'displayName', 'studentId', 'highScore', 'gamesPlayed', 'avgReactionTime', 'badges', 'createdAt']) &&
+               data.uid == userId &&
+               data.uid is string &&
+               data.email is string &&
+               data.displayName is string &&
+               data.studentId is string &&
+               data.highScore is number &&
+               data.gamesPlayed is number &&
+               data.avgReactionTime is number &&
+               data.badges is list &&
+               data.createdAt is string;
+      }
+
+      allow create: if isOwner(userId)
+                    && isValidUser(incoming());
+
+      allow update: if isOwner(userId)
+                    && (
+                      isValidUser(incoming()) || 
+                      incoming().diff(existing()).affectedKeys().hasAny(['highScore', 'gamesPlayed', 'avgReactionTime', 'badges', 'updatedAt', 'displayName', 'studentId'])
+                    );
+
+      allow delete: if isOwner(userId);
+    }
+
+    // Student IDs index for uniqueness
+    match /studentIds/{studentId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && incoming().uid == request.auth.uid;
+      allow delete: if isSignedIn() && existing().uid == request.auth.uid;
+      allow update: if false;
+    }
+
+    // Leaderboard/Scores
+    match /scores/{scoreId} {
+      // Public leaderboard: anyone signed in can read any score
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      
+      function isValidScore(data) {
+        return data.keys().hasAll(['uid', 'displayName', 'score', 'timestamp']) &&
+               data.uid == request.auth.uid &&
+               data.uid is string &&
+               data.displayName is string &&
+               data.score is number &&
+               data.timestamp is string;
+      }
+
+      allow create: if isSignedIn() && isValidScore(incoming());
+      allow update: if isSignedIn() && existing().uid == request.auth.uid && isValidScore(incoming());
+      allow delete: if false;
+    }
+
+    // Achievement Badges
+    match /badges/{badgeId} {
+      // Anyone signed in can see badges (e.g. on someone's profile)
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      
+      function isValidBadge(data) {
+        return data.keys().hasAll(['uid', 'labId', 'badgeName', 'svgIcon', 'earnedAt']) &&
+               data.uid is string && data.uid == request.auth.uid &&
+               data.labId is string &&
+               data.badgeName is string &&
+               data.svgIcon is string &&
+               data.earnedAt is string;
+      }
+      
+      allow create: if isSignedIn() && isValidBadge(incoming());
+      allow update, delete: if false;
+    }
+
+    // Multiplayer presence
+    match /active_players/{userId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isOwner(userId);
+    }
+    
+    // Capstone Feedbacks
+    match /feedbacks/{feedbackId} {
+      // Only the admin can read feedbacks
+      allow read: if isSignedIn() && (request.auth.token.email == 'jvbinas055@gmail.com'); 
+      
+      function isValidFeedback(data) {
+        return data.keys().hasAll(['uid', 'overallRating', 'timestamp']) &&
+               data.uid == request.auth.uid &&
+               data.uid is string &&
+               data.overallRating is number &&
+               data.overallRating >= 1 && data.overallRating <= 5 &&
+               data.timestamp is string;
+      }
+      
+      allow create: if isSignedIn() && isValidFeedback(incoming());
+      allow update, delete: if false;
+    }
+    
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

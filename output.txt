@@ -1,0 +1,13 @@
+4:import { Gamepad2, Award, Users, Target, Volume2, Sparkles, LogOut, Settings, Sliders, Smartphone, Monitor, Tv, Tablet, Sun, Moon, LayoutDashboard, User } from "lucide-react";
+17:import GameConsole from "./components/GameConsole";
+31:  const [isGameActive, setIsGameActive] = useState<boolean>(false);
+189:        const displayLabel = displayName || studentId || "Gamer Tag";
+345:      const displayLabel = displayNameToSave || user.studentId || "Gamer Tag";
+494:  const handleGameEnd = () => {
+496:    setIsGameActive(false);
+499:  const handleGameStart = () => {
+500:    setIsGameActive(true);
+710:                  <GameConsole
+713:                    onGameStart={handleGameStart}
+714:                    onGameEnd={handleGameEnd}
+1080:          <Gamepad2 className="w-6 h-6 text-cyan-400 absolute" />

@@ -1,0 +1,6 @@
+{
+  "name": "IT-MASTERY",
+  "description": "Web-Based Interactive Gamification Platform for Enhancing Student Engagement in Foundational IT Concepts",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
