@@ -668,13 +668,7 @@ export default function App() {
                     <Settings className="w-4 h-4 flex-shrink-0" />
                   </button>
 
-                  <button 
-                    onClick={() => setShowFeedbackModal(true)} 
-                    title="Capstone Feedback"
-                    className={`flex items-center justify-center p-2 rounded-lg border transition-all duration-200 h-8 w-8 cursor-pointer bg-transparent border-border text-muted hover:text-signal hover:border-signal`}
-                  >
-                    <MessageSquare className="w-4 h-4 flex-shrink-0" />
-                  </button>
+
 
                   {user.gmail === 'jvbinas055@gmail.com' && (
                     <button 
